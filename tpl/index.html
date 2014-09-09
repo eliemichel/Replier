@@ -1,0 +1,13 @@
+{include="_begin"}
+
+<main>
+	{if="empty($entries)"}
+	<p>
+		<em>No entries</em>
+	</p>
+	{else}
+		{include="_entry_list"}
+	{/if}
+</main>
+
+{include="_end"}

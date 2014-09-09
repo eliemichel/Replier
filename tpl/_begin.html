@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Replier</title>
+		<meta charset="utf-8" />
+		<link rel="stylesheet" href="style.css" />
+	</head>
+	<body>
+		<nav>
+			<a href="/">Home</a>
+			{if="$logged_in"}
+			<a href="/?new">Comment</a>
+			<a href="/?logout">Log out</a>
+			{else}
+			<a href="/?login">Log in</a>
+			{/if}
+		</nav>
+		{loop="$dialogs"}
+		<header class="dialog-{$value['type']}">
+			<h4>{$value['title']}</h4>
+			<p>
+				{$value['content']}
+			</p>
+		</header>
+		{/loop}
