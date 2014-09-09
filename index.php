@@ -2,7 +2,7 @@
 session_start();
 
 define('SCRIPTNAME', 'Replier');
-define('BASE_URL', '/Replier/');
+define('BASE_URL', 'http://tools.exppad.com/Replier/'); // Must be absolute
 define('TOKEN_TTL', 300);
 define('SESSION_TTL', 3600);
 define('DATA_DIR', 'data');
@@ -125,8 +125,8 @@ function save_entry($id, $reply_to, $content) {
 /**
  * Try and send a webmention to the commented URL
  */
-function webmention($url) {
-	$data = file_get_contents($url);
+function webmention($source, $target) {
+	$data = file_get_contents($target);
 	$status = $http_response_header[0];
 	if (strpos($status, '200') === false) return false;
 
@@ -137,10 +137,9 @@ function webmention($url) {
 	preg_match('!<link .*href *= *\"(.+?)\" .*rel *= *\"(?:(?:webmention|http://webmention.org/?) *)+\"!',$data,$matches); // The order between rel and href can be different
 	if (!empty($matches[1])) $endpoint=$matches[1];
 
-	if ($endpoint) {
-	}
+	if (!$endpoint) return false;
 	
-	$postdata = http_build_query(array('source' => $source, 'target' => $url));
+	$postdata = http_build_query(array('source' => $source, 'target' => $target));
 	$options = array('http' => array('method' => 'POST', 'timeout' => 4, 'header' => 'Content-type: application/x-www-form-urlencoded', 'content' => $postdata));
 	$context = stream_context_create($options);
 	
@@ -326,11 +325,12 @@ if ($logged_in) {
 			exit();
 		}
 
-		if (!webmention($_POST['reply-to'])) {
+		$id = save_entry($_POST['id'], $_POST['reply-to'], $_POST['content']);
+
+		if (!webmention(BASE_URL.'?'.$id, $_POST['reply-to'])) {
 			append_dialog(make_warning('Webmention not supported', 'The commented URL does not support webmention so is not aware of your comment.'));
 		}
 
-		$id = save_entry($_POST['id'], $_POST['reply-to'], $_POST['content']);
 		$tpl->assign('entries', array(get_entry($id)));
 		$tpl->draw('index');
 		exit();
