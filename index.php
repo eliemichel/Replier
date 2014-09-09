@@ -2,7 +2,7 @@
 session_start();
 
 define('SCRIPTNAME', 'Replier');
-define('BASE_URL', '/~elie/Replier/');
+define('BASE_URL', '/Replier/');
 define('TOKEN_TTL', 300);
 define('SESSION_TTL', 3600);
 define('DATA_DIR', 'data');
@@ -82,7 +82,7 @@ function smallHash($text)
  */
 function delete_entry($id) {
 	global $dbh;
-	
+
 	$query = $dbh->prepare('DELETE FROM Entry WHERE id=:id');
 	$query->execute(array(':id' => $id));
 }
@@ -121,12 +121,32 @@ function save_entry($id, $reply_to, $content) {
 	return $id;
 }
 
+
 /**
  * Try and send a webmention to the commented URL
- * @todo
  */
-function webmention() {
-	return true;
+function webmention($url) {
+	$data = file_get_contents($url);
+	$status = $http_response_header[0];
+	if (strpos($status, '200') === false) return false;
+
+	$endpoint=null;
+	// Get webmention endpoint. Can be rel="webmention", rel="http://webmention.org/", rel="webmention http://webmention.org/", etc.
+	preg_match('!<link .*rel *= *\"(?:(?:webmention|http://webmention.org/?) *)+\" .*href *= *\"(.+?)\"!', $data, $matches);
+	if (!empty($matches[1])) $endpoint=$matches[1];
+	preg_match('!<link .*href *= *\"(.+?)\" .*rel *= *\"(?:(?:webmention|http://webmention.org/?) *)+\"!',$data,$matches); // The order between rel and href can be different
+	if (!empty($matches[1])) $endpoint=$matches[1];
+
+	if ($endpoint) {
+	}
+	
+	$postdata = http_build_query(array('source' => $source, 'target' => $url));
+	$options = array('http' => array('method' => 'POST', 'timeout' => 4, 'header' => 'Content-type: application/x-www-form-urlencoded', 'content' => $postdata));
+	$context = stream_context_create($options);
+	
+	$res = file_get_contents($endpoint, false, $context);
+	$status = $http_response_header[0];
+	return strpos($status, '200') !== false or strpos($status, '202') !== false;
 }
 
 /**
@@ -228,7 +248,6 @@ function check_login() {
 
 // Installation of RainTPL
 if (!is_raintpl_installed()) {
-	echo("Install RainTPL<br/>\n");
 	$error = install_raintpl();
 	if ($error) {
 		?>

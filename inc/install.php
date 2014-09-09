@@ -24,7 +24,7 @@ function is_installed() {
  */
 function install_dir($dir) {
 	if (!file_exists($dir) || !is_writable($dir)) {
-		if (!is_writable($dir) || !mkdir($dir)) {
+		if (!mkdir($dir) || !is_writable($dir)) {
 			return make_error('Permissions error', "Unable to write into `$dir` directory");
 		}
 	}

@@ -6,7 +6,23 @@
 		<em>No entries</em>
 	</p>
 	{else}
-		{include="_entry_list"}
+		{loop="$entries"}
+			<article class="h-entry">
+				<h1 class="p-name">@<a class="u-in-reply-to" rel="in-reply-to" href="{$value['replyTo']}">{$value['replyTo']}</a></h1>
+				<p class="entry--info">
+					<a class="u-url" href="/?{$value['id']}"><time class="dt-published" datetime="{function="format_date_iso($value['pubDate'])"}">{function="format_date($value['pubDate'])"}</time></a>
+				</p>
+				{if="$logged_in"}
+				<p class="entry--action">
+					<a href="/?edit={$value['id']}">Edit</a>
+					<a href="/?delete={$value['id']}">Delete</a>
+				</p>
+				{/if}
+				<p class="e-content">
+					{function="format_content($value['content'])"}
+				</p>
+			</article>
+		{/loop}
 	{/if}
 </main>
 
