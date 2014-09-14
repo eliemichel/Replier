@@ -12,6 +12,7 @@ define('DB_FILE', DATA_DIR.'/db.sqlite');
 
 require_once('inc/install.php');
 require_once('inc/csrf.php');
+require_once('inc/simple_html_dom.php');
 require_once('inc/rain.tpl.class.php');
 RainTPL::$base_url = BASE_URL;
 RainTPL::$cache_dir = TMP_DIR . '/';
@@ -50,6 +51,10 @@ function get_all_entries() {
 	$query = $dbh->query('SELECT * FROM Entry ORDER BY pubDate');
 	$entries = $query->fetchall(PDO::FETCH_ASSOC);
 
+	foreach ($entries as &$entry) {
+		$entry['type'] = 'reply';
+	}
+
 	return $entries;
 }
 
@@ -65,7 +70,25 @@ function get_entry($id) {
 
 	if (count($entries) == 0) return false;
 
+	$entries[0]['type'] = 'reply';
+
 	return $entries[0];
+}
+
+/**
+ * Get parent entry, i.e. post to which the entry replies to
+ */
+function get_parent_entry($entry) {
+	$url = $entry['replyTo'];
+
+	$html = file_get_html($url);
+	if ($html === false) return false;
+	$node = $html->find('.h-entry')[0];
+	$parent = array(
+		'title' => $node->find('.p-name', 0)->plaintext,
+		'content' => $node->find('.e-content', 0)->plaintext,
+	);
+	return $parent;
 }
 
 /**
@@ -99,8 +122,8 @@ function save_entry($id, $reply_to, $content) {
 		$entry = get_entry($id);
 		$pub_date = $entry['pubDate'];
 	} else {
-		$id = smallHash($pub_date);
 		$pub_date = time();
+		$id = smallHash($pub_date);
 	}
 	$dbh->beginTransaction();
 	if ($id != '') {
@@ -154,7 +177,7 @@ function webmention($source, $target) {
  */
 function format_date($timestamp) {
 	$today = time();
-	return date('Y-m-d H:i:s', $timestamp);
+	return date('M d, Y H:i', $timestamp);
 }
 
 /**
@@ -176,6 +199,15 @@ function format_content($content) {
 	return $content;
 }
 
+/**
+ * Keep only the first $limit characters (cut at white spaces)
+ */
+function truncate_text($text, $limit=200) {
+	if (preg_match('#^(.{'.$limit.',}?)\s#', $text, $matches)) {
+		$text = $matches[1];
+	}
+	return $text;
+}
 
 /**
  * Get user info by login
@@ -243,6 +275,29 @@ function check_login() {
 function domain_of_url($url) {
 	preg_match("#^.*?://(.*?)(/|$)#", $url, $matches);
 	return $matches[1];
+}
+
+
+/**
+ * Views
+ */
+function show_entry($id) {
+	global $tpl;
+
+	$entry = get_entry($id);
+
+	if ($entry === false) {
+		append_dialog(make_error('Bad entry id', 'No entry was found with id `' . htmlspecialchars($id) . '` !'));
+		$tpl->assign('entries', get_all_entries());
+		$tpl->draw('index');
+		exit();
+	}
+
+	$parent_entry = get_parent_entry($entry);
+	if ($parent_entry !== false) $entry['parent'] = $parent_entry;
+
+	$tpl->assign('entries', array($entry));
+	$tpl->draw('index');
 }
 
 
@@ -336,8 +391,7 @@ if ($logged_in) {
 			append_dialog(make_warning('Webmention not supported', 'The commented URL does not support webmention so is not aware of your comment.'));
 		}
 
-		$tpl->assign('entries', array(get_entry($id)));
-		$tpl->draw('index');
+		show_entry($id);
 		exit();
 	}
 
@@ -451,17 +505,7 @@ if (isset($_GET['user'])) {
 // Show single entry
 if (strlen($_SERVER['QUERY_STRING']) == 6) {
 	$id = $_SERVER['QUERY_STRING'];
-	$entry = get_entry($id);
-
-	if ($entry === false) {
-		append_dialog(make_error('Bad entry id', 'No entry was found with id `' . htmlspecialchars($id) . '` !'));
-		$tpl->assign('entries', get_all_entries());
-		$tpl->draw('index');
-		exit();
-	}
-
-	$tpl->assign('entries', array($entry));
-	$tpl->draw('index');
+	show_entry($id);
 	exit();
 }
 

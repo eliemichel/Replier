@@ -7,20 +7,31 @@
 	</p>
 	{else}
 		{loop="$entries"}
-		<article class="entry h-entry">
-			<p class="entry--content p-name"><a class="u-in-reply-to" rel="in-reply-to" href="{$value['replyTo']}#">@{function="domain_of_url($value['replyTo'])"}</a></p>
-			<p class="entry--content e-content">
-				{function="format_content($value['content'])"}
-			</p>
-			<p class="entry--info">
-				<a class="u-url" href="/?{$value['id']}"><time class="dt-published" datetime="{function="format_date_iso($value['pubDate'])"}">{function="format_date($value['pubDate'])"}</time></a>
-			</p>
-			{if="$logged_in"}
-			<p class="entry--action">
-				<a href="/?edit={$value['id']}">Edit</a>
-				<a href="/?delete={$value['id']}">Delete</a>
-			</p>
+		<article class="entry h-entry {$value['type']}">
+			{if="isset($value['parent'])"}
+			<div class="entry--section entry--parent">
+				<h1><a href="{$value['replyTo']}#">{$value['parent']['title']}</a></h1>
+				<p>
+					{function="truncate_text($value['parent']['content'])"}
+					<span class="entry--read-more"> — <a href="{$value['replyTo']}#">Read more…</a></span>
+				</p>
+			</div>
 			{/if}
+			<div class="entry--section">
+				<p class="entry--content p-name"><a class="u-in-reply-to" rel="in-reply-to" href="{$value['replyTo']}#">@{function="domain_of_url($value['replyTo'])"}</a></p>
+				<p class="entry--content e-content">
+					{function="format_content($value['content'])"}
+				</p>
+				<p class="entry--info">
+					<a class="entry--permalink u-url" href="/?{$value['id']}"><time class="dt-published" datetime="{function="format_date_iso($value['pubDate'])"}">{function="format_date($value['pubDate'])"}</time></a>
+				</p>
+				{if="$logged_in"}
+				<p class="entry--action">
+					<a href="/?edit={$value['id']}">Edit</a>
+					<a href="/?delete={$value['id']}">Delete</a>
+				</p>
+				{/if}
+			</div>
 		</article>
 		{/loop}
 	{/if}

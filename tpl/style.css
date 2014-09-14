@@ -5,6 +5,14 @@ body {
 	font-family: "Nimbus Sans L", sans-serif;
 }
 
+header.dialog-info {
+	color: #0f0;
+}
+
+header.dialog-error {
+	color: #f00;
+}
+
 a {
 	color: #07d;
 	text-decoration: none;
@@ -16,16 +24,21 @@ a:hover {
 }
 
 
+nav {
+	border-bottom: 3px solid #ddd;
+}
+
 nav a {
-	background-color: #888;
 	padding: 0.5em;
 	display: inline-block;
-	color: #eee;
+	color: #888;
 	text-decoration: none;
 }
 
 nav a:hover {
-	background-color: #999;
+	/*color: #666;
+	background-color: #eee;*/
+	text-decoration: none;	
 }
 
 
@@ -33,23 +46,39 @@ nav a:hover {
 .entry {
 	border: 1px solid #ddd;
 	border-radius: 5px;
+
 	background-color: #fff;
-	padding: 0.5em 1em;
+
 	margin: 2em 0;
+}
+
+.entry--section {
+	padding: 0.5em 1em;
+}
+
+.entry--section:not(:last-child) {
+	border-bottom: 1px solid #ddd;
+}
+
+.entry--parent {
+	background-color: #efeff8;
 }
 
 .entry--content {
 	font-size: 1.5em;
 }
 
-
-
-
-header.dialog-info {
-	color: #0f0;
+.entry--permalink {
+	color: #999;
+	font-size: 0.9em;
 }
 
-header.dialog-error {
-	color: #f00;
+.entry--permalink:hover {
+	color: #777;
 }
+
+.entry--read-more {
+	color: #999;
+}
+
 
