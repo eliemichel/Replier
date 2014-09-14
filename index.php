@@ -171,7 +171,7 @@ function format_date_iso($timestamp) {
  * @param raw content
  */
 function format_content($content) {
-	$content = htmlspecialchars($content);
+	//$content = htmlspecialchars($content);
 	$content = str_replace("\n", "<br/>\n", $content);
 	return $content;
 }
@@ -239,6 +239,11 @@ function check_login() {
 	return true;
 }
 
+
+function domain_of_url($url) {
+	preg_match("#^.*?://(.*?)(/|$)#", $url, $matches);
+	return $matches[1];
+}
 
 
 /**
@@ -422,6 +427,24 @@ if (isset($_POST['login']) and isset($_POST['password'])) {
 if (isset($_GET['login'])) {
 	$tpl->assign('login', '');
 	$tpl->draw('login');
+	exit();
+}
+
+
+// Log in form
+if (isset($_GET['user'])) {
+	$login = $_GET['user'];
+	$user = get_user_by_login($login);
+
+	if ($entry === false) {
+		append_dialog(make_error('Bad user name', 'No user was found with name `' . htmlspecialchars($login) . '` !'));
+		$tpl->assign('entries', get_all_entries());
+		$tpl->draw('index');
+		exit();
+	}
+
+	$tpl->assign('hcard', $user);
+	$tpl->draw('hcard');
 	exit();
 }
 
